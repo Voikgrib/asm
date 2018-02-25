@@ -7,11 +7,84 @@
 .code
 
 org 100h
+
+Start:	
+jmp Main					; Inache ne compilit
+
 L_U_CORNER	= 25 * 80 - 10
-LENGH		= 9h
+LENGH		= 0ch
 HIGH		= 2h
 VIDEOSEG        = 0b800h
-Start:          mov ax, VIDEOSEG       		;
+
+YGOL_1		= 0c9h				; Left Up corner
+YGOL_2		= 0c8h				; Left Down corner
+YGOL_3		= 0bbh				; Right Up corner
+YGOL_4		= 0bch				; Right Down corner
+STENA		= 0bah				; Wall
+POL		= 0cdh				; pol/potolok
+COLOR		= 4eh				; color of all
+
+;========================================================================
+
+RamkaPrint proc					; Print ramka
+		mov bx, L_U_CORNER		
+		mov es:[bx], YGOL_1
+		mov es:[bx+1], COLOR		; Print first ygol
+		add bx, 2
+
+		mov cx, L_U_CORNER + LENGH + LENGH 
+
+Fir_line:	mov es:[bx], pol		; while(not sentr line)
+		mov es:[bx+1], COLOR		; printf("=")
+		add bx, 2			; bx = bx + 2
+
+		cmp bx, cx
+		jne Fir_line		; while end
+		
+		mov es:[bx], YGOL_3
+		mov es:[bx+1], COLOR		
+
+		
+New_line:	add bx, 160
+		mov dx, bx			; dx = end of new line
+		sub bx, LENGH + LENGH		; bx = start of new line
+		mov es:[bx], STENA
+		mov es:[bx + 1], COLOR		; set left wall
+
+Sentr_line:	add bx, 2
+		cmp bx, dx
+		jne Sentr_line
+		mov es:[bx], STENA		; +---------------------+
+		mov es:[bx + 1], COLOR		; | print walls		|
+						; | using si position	|
+		cmp bx, si			; | as end		|
+		je End_line_st			; +---------------------+
+		jmp New_line
+			
+End_line_st:	sub bx, LENGH + LENGH
+
+		mov es:[bx], YGOL_2
+		mov es:[bx + 1], COLOR
+		add bx, 2
+
+End_line:	mov es:[bx], POL
+		mov es:[bx+1], COLOR
+		add bx, 2
+		cmp bx, si
+		jne End_line
+
+		mov es:[bx], YGOL_4
+		mov es:[bx+1], COLOR		
+
+		ret
+RamkaPrint endp
+
+;========================================================================
+;=========================== MAIN START =================================
+;========================================================================
+
+Main:
+	        mov ax, VIDEOSEG       		;
                 mov es, ax             		; es = VIDEOSEG
                 mov bx, L_U_CORNER		; bx = senter
 		mov dx, 0h		 	; dl = 0
@@ -36,12 +109,18 @@ Line:		mov ax, ' '			; al = ' '
 		mov bx, ax			; move on L_U_CORNER
 
 		cmp dx, HIGH			
-		je Text
+		je Ramka
 		
 		add dx, 1			; dx++
 
 		cmp bx, si			
 		jne Line			; while in colums
+
+;============================= RAMKA PRINT (si = end) ===================
+Ramka:		
+		call RamkaPrint			; si = END!!!!!
+
+;========================================================================
 	
 Text:		mov si, offset meow		; si = &meow
 		
@@ -57,6 +136,7 @@ Chet:		mov ax, HIGH
 		add ax, L_U_CORNER
 		mov bx, ax			; bx = sentral line
 		xor ax, ax
+		add bx, 2
 		jmp Next			
 
 Nechet:		mov ax, HIGH
@@ -65,7 +145,10 @@ Nechet:		mov ax, HIGH
 		add ax, 50h
 		add ax, L_U_CORNER
 		mov bx, ax
-		xor ax, ax			
+		xor ax, ax
+		add bx, 2
+
+;=====================================================================
 
 Next:		mov al, [si]			; al = si*
 		inc si				; si++
@@ -87,11 +170,12 @@ Next:		mov al, [si]			; al = si*
 
 End_t:          mov ax, 4c00h           	; exit(0)
                 int 21h
+		
+		jmp Mem_end 
+meow db 	'I ', 03h, ' cats!$'
 
-meow db		'I ', 03h, ' cats!$'
+Mem_end:
 
 end Start
 
 ;=======================================================================
-
-

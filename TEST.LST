@@ -1,0 +1,302 @@
+Turbo Assembler	 Version 4.1	    02/23/18 13:56:03	    Page 1
+test.asm
+
+
+
+      1				     ;---------------------------------------------------------------------;
+      2				     ;			 Create	ramka on screen
+      3				     ;
+      4				     ;---------------------------------------------------------------------;
+      5
+      6	0000			     .model tiny
+      7	0000			     .code
+      8
+      9				     org 100h
+     10
+     11	0100			     Start:
+     12	0100  E9 008C		     jmp Main					     ; Inache ne compilit
+     13
+     14	      =07C6		     L_U_CORNER	     = 25 * 80 - 10
+     15	      =000C		     LENGH	     = 0ch
+     16	      =0002		     HIGH	     = 2h
+*Warning* test.asm(16) Reserved	word used as symbol: HIGH
+     17	      =B800		     VIDEOSEG	     = 0b800h
+     18
+     19	      =00C9		     YGOL_1	     = 0c9h			     ; Left Up corner
+     20	      =00C8		     YGOL_2	     = 0c8h			     ; Left Down corner
+     21	      =00BB		     YGOL_3	     = 0bbh			     ; Right Up	corner
+     22	      =00BC		     YGOL_4	     = 0bch			     ; Right Down corner
+     23	      =00BA		     STENA	     = 0bah			     ; Wall
+     24	      =00CD		     POL	     = 0cdh			     ; pol/potolok
+     25	      =004E		     COLOR	     = 4eh			     ; color of	all
+     26
+     27				     ;========================================================================
+     28
+     29	0103			     RamkaPrint	proc				     ; Print ramka
+     30	0103  BB 07C6				     mov bx, L_U_CORNER
+     31	0106  26: C7 07	00C9			     mov es:[bx], YGOL_1
+*Warning* test.asm(31) Argument	needs type override
+     32	010B  26: C7 47	01 004E			     mov es:[bx+1], COLOR	     ; Print first ygol
+*Warning* test.asm(32) Argument	needs type override
+     33	0111  83 C3 02				     add bx, 2
+     34
+     35	0114  B9 07DE				     mov cx, L_U_CORNER	+ LENGH	+ LENGH
+     36
+     37	0117  26: C7 07	00CD	     Fir_line:	     mov es:[bx], pol		     ; while(not sentr line)
+*Warning* test.asm(37) Argument	needs type override
+     38	011C  26: C7 47	01 004E			     mov es:[bx+1], COLOR	     ; printf("=")
+*Warning* test.asm(38) Argument	needs type override
+     39	0122  83 C3 02				     add bx, 2			     ; bx = bx + 2
+     40
+     41	0125  3B D9				     cmp bx, cx
+     42	0127  75 EE				     jne Fir_line	     ; while end
+     43
+     44	0129  26: C7 07	00BB			     mov es:[bx], YGOL_3
+*Warning* test.asm(44) Argument	needs type override
+     45	012E  26: C7 47	01 004E			     mov es:[bx+1], COLOR
+*Warning* test.asm(45) Argument	needs type override
+     46
+     47
+     48	0134  81 C3 00A0	     New_line:	     add bx, 160
+     49	0138  8B D3				     mov dx, bx			     ; dx = end	of new line
+     50	013A  83 EB 18				     sub bx, LENGH + LENGH	     ; bx = start of new line
+Turbo Assembler	 Version 4.1	    02/23/18 13:56:03	    Page 2
+test.asm
+
+
+
+     51	013D  26: C7 07	00BA			     mov es:[bx], STENA
+*Warning* test.asm(51) Argument	needs type override
+     52	0142  26: C7 47	01 004E			     mov es:[bx	+ 1], COLOR	     ; set left	wall
+*Warning* test.asm(52) Argument	needs type override
+     53
+     54	0148  83 C3 02		     Sentr_line:     add bx, 2
+     55	014B  3B DA				     cmp bx, dx
+     56	014D  75 F9				     jne Sentr_line
+     57	014F  26: C7 07	00BA			     mov es:[bx], STENA		     ; +---------------------+
+*Warning* test.asm(57) Argument	needs type override
+     58	0154  26: C7 47	01 004E			     mov es:[bx	+ 1], COLOR	     ; | print walls	     |
+*Warning* test.asm(58) Argument	needs type override
+     59										     ; | using si position   |
+     60	015A  3B DE				     cmp bx, si			     ; | as end		     |
+     61	015C  74 02				     je	End_line_st		     ; +---------------------+
+     62	015E  EB D4				     jmp New_line
+     63
+     64	0160  83 EB 18		     End_line_st:    sub bx, LENGH + LENGH
+     65
+     66	0163  26: C7 07	00C8			     mov es:[bx], YGOL_2
+*Warning* test.asm(66) Argument	needs type override
+     67	0168  26: C7 47	01 004E			     mov es:[bx	+ 1], COLOR
+*Warning* test.asm(67) Argument	needs type override
+     68	016E  83 C3 02				     add bx, 2
+     69
+     70	0171  26: C7 07	00CD	     End_line:	     mov es:[bx], POL
+*Warning* test.asm(70) Argument	needs type override
+     71	0176  26: C7 47	01 004E			     mov es:[bx+1], COLOR
+*Warning* test.asm(71) Argument	needs type override
+     72	017C  83 C3 02				     add bx, 2
+     73	017F  3B DE				     cmp bx, si
+     74	0181  75 EE				     jne End_line
+     75
+     76	0183  26: C7 07	00BC			     mov es:[bx], YGOL_4
+*Warning* test.asm(76) Argument	needs type override
+     77	0188  26: C7 47	01 004E			     mov es:[bx+1], COLOR
+*Warning* test.asm(77) Argument	needs type override
+     78
+     79	018E  C3				     ret
+     80	018F			     RamkaPrint	endp
+     81
+     82				     ;========================================================================
+     83				     ;=========================== MAIN START =================================
+     84				     ;========================================================================
+     85
+     86	018F			     Main:
+     87	018F  B8 B800				     mov ax, VIDEOSEG		     ;
+     88	0192  8E C0				     mov es, ax			     ; es = VIDEOSEG
+     89	0194  BB 07C6				     mov bx, L_U_CORNER		     ; bx = senter
+     90	0197  BA 0000				     mov dx, 0h			     ; dl = 0
+     91	019A  BE 07DE				     mov si, L_U_CORNER	+ LENGH	* 2  ; si = end	of cur line
+     92
+     93										     ; printf ramka
+     94	019D  B8 0020		     Line:	     mov ax, ' '		     ; al = ' '
+     95	01A0  26: 88 07				     mov es:[bx], al		     ; place ramka
+     96	01A3  26: C7 47	01 004E			     mov es:[bx+1], 4eh		     ; red backgrownd
+*Warning* test.asm(96) Argument	needs type override
+Turbo Assembler	 Version 4.1	    02/23/18 13:56:03	    Page 3
+test.asm
+
+
+
+     97
+     98	01A9  83 C3 02				     add bx, 2			     ; bx = bx + 2
+     99
+    100	01AC  32 E4				     xor ah, ah
+    101	01AE  CD 16				     int 16h			     ; BIOS 16h
+    102
+    103	01B0  3B DE				     cmp bx, si			     ; while end Line
+    104	01B2  75 E9				     jne Line
+    105
+    106	01B4  81 C6 00A0			     add si, 0a0h		     ; si = si + 160
+    107	01B8  8B C6				     mov ax, si			     ;
+    108	01BA  2D 0018				     sub ax, LENGH * 2		     ;
+    109	01BD  8B D8				     mov bx, ax			     ; move on L_U_CORNER
+    110
+    111	01BF  83 FA 02				     cmp dx, HIGH
+    112	01C2  74 07				     je	Ramka
+    113
+    114	01C4  83 C2 01				     add dx, 1			     ; dx++
+    115
+    116	01C7  3B DE				     cmp bx, si
+    117	01C9  75 D2				     jne Line			     ; while in	colums
+    118
+    119				     ;============================= RAMKA PRINT	(si = end) ===================
+    120	01CB			     Ramka:
+    121	01CB  E8 FF35				     call RamkaPrint		     ; si = END!!!!!
+    122
+    123				     ;========================================================================
+    124
+    125	01CE  BE 022Er		     Text:	     mov si, offset meow	     ; si = &meow
+    126
+    127	01D1  B8 0002				     mov ax, HIGH		     ; proverka	na chetnost
+    128	01D4  25 0001				     and ax, 1h
+    129	01D7  3D 0001				     cmp ax, 1h
+    130	01DA  74 17				     je	Nechet
+    131	01DC  75 00				     jne Chet
+    132
+    133	01DE  B8 0002		     Chet:	     mov ax, HIGH
+    134	01E1  B9 0050				     mov cx, 50h
+    135	01E4  F7 E1				     mul cx
+    136	01E6  05 07C6				     add ax, L_U_CORNER
+    137	01E9  8B D8				     mov bx, ax			     ; bx = sentral line
+    138	01EB  33 C0				     xor ax, ax
+    139	01ED  83 C3 02				     add bx, 2
+    140	01F0  EB 16 90				     jmp Next
+    141
+    142	01F3  B8 0002		     Nechet:	     mov ax, HIGH
+    143	01F6  B9 0050				     mov cx, 50h
+    144	01F9  F7 E1				     mul cx
+    145	01FB  05 0050				     add ax, 50h
+    146	01FE  05 07C6				     add ax, L_U_CORNER
+    147	0201  8B D8				     mov bx, ax
+    148	0203  33 C0				     xor ax, ax
+    149	0205  83 C3 02				     add bx, 2
+    150
+    151				     ;=====================================================================
+    152
+    153	0208  8A 04		     Next:	     mov al, [si]		     ; al = si*
+Turbo Assembler	 Version 4.1	    02/23/18 13:56:03	    Page 4
+test.asm
+
+
+
+    154	020A  46				     inc si			     ; si++
+    155
+    156	020B  3C 24				     cmp al, '$'		     ; if(al ==	'$')
+    157	020D  74 17				     je	End_t			     ;	 jump End_t
+    158
+    159	020F  26: 88 07				     mov es:[bx], al		     ; Text[bx]	= cur_sym
+    160	0212  26: C7 47	01 004E			     mov es:[bx+1], 4eh		     ; Y on B
+*Warning* test.asm(160)	Argument needs type override
+    161	0218  8A D0				     mov dl, al			     ; save al
+    162
+    163	021A  32 E4				     xor ah, ah			     ; BIOS 16h
+    164	021C  CD 16				     int 16h
+    165
+    166	021E  83 C3 02				     add bx, 2
+    167
+    168	0221  80 FA 24				     cmp dl, '$'
+    169	0224  75 E2				     jne Next			     ; while end
+    170
+    171	0226  B8 4C00		     End_t:	     mov ax, 4c00h		     ; exit(0)
+    172	0229  CD 21				     int 21h
+    173
+    174	022B  EB 0B 90				     jmp Mem_end
+    175	022E  49 20 03 20 63 61	74+  meow db	     'I	', 03h,	' cats!$'
+    176	      73 21 24
+    177
+    178	0238			     Mem_end:
+    179
+    180				     end Start
+Turbo Assembler	 Version 4.1	    02/23/18 13:56:03	    Page 5
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "02/23/18"
+??FILENAME			  Text	 "test	  "
+??TIME				  Text	 "13:56:03"
+??VERSION			  Number 040A
+@32BIT				  Text	 0
+@CODE				  Text	 DGROUP
+@CODESIZE			  Text	 0
+@CPU				  Text	 0101H
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 TEST
+@INTERFACE			  Text	 000H
+@MODEL				  Text	 1
+@STACK				  Text	 DGROUP
+@WORDSIZE			  Text	 2
+CHET				  Near	 DGROUP:01DE
+COLOR				  Number 004E
+END_LINE			  Near	 DGROUP:0171
+END_LINE_ST			  Near	 DGROUP:0160
+END_T				  Near	 DGROUP:0226
+FIR_LINE			  Near	 DGROUP:0117
+HIGH				  Number 0002
+LENGH				  Number 000C
+LINE				  Near	 DGROUP:019D
+L_U_CORNER			  Number 07C6
+MAIN				  Near	 DGROUP:018F
+MEM_END				  Near	 DGROUP:0238
+MEOW				  Byte	 DGROUP:022E
+NECHET				  Near	 DGROUP:01F3
+NEW_LINE			  Near	 DGROUP:0134
+NEXT				  Near	 DGROUP:0208
+POL				  Number 00CD
+RAMKA				  Near	 DGROUP:01CB
+RAMKAPRINT			  Near	 DGROUP:0103
+SENTR_LINE			  Near	 DGROUP:0148
+START				  Near	 DGROUP:0100
+STENA				  Number 00BA
+TEXT				  Near	 DGROUP:01CE
+VIDEOSEG			  Number B800
+YGOL_1				  Number 00C9
+YGOL_2				  Number 00C8
+YGOL_3				  Number 00BB
+YGOL_4				  Number 00BC
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  _DATA				  16  0000 Word	  Public  DATA
+  _TEXT				  16  0238 Word	  Public  CODE
+Turbo Assembler	 Version 4.1	    02/23/18 13:56:03	    Page 6
+Error Summary
+
+
+
+*Warning* test.asm(16) Reserved	word used as symbol: HIGH
+*Warning* test.asm(31) Argument	needs type override
+*Warning* test.asm(32) Argument	needs type override
+*Warning* test.asm(37) Argument	needs type override
+*Warning* test.asm(38) Argument	needs type override
+*Warning* test.asm(44) Argument	needs type override
+*Warning* test.asm(45) Argument	needs type override
+*Warning* test.asm(51) Argument	needs type override
+*Warning* test.asm(52) Argument	needs type override
+*Warning* test.asm(57) Argument	needs type override
+*Warning* test.asm(58) Argument	needs type override
+*Warning* test.asm(66) Argument	needs type override
+*Warning* test.asm(67) Argument	needs type override
+*Warning* test.asm(70) Argument	needs type override
+*Warning* test.asm(71) Argument	needs type override
+*Warning* test.asm(76) Argument	needs type override
+*Warning* test.asm(77) Argument	needs type override
+*Warning* test.asm(96) Argument	needs type override
+*Warning* test.asm(160)	Argument needs type override
+
