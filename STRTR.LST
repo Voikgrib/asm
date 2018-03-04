@@ -1,0 +1,417 @@
+Turbo Assembler	 Version 4.1	    03/04/18 13:26:50	    Page 1
+strtr.asm
+
+
+
+      1				     ;------------------------------------------------------------;
+      2				     ;		     Translate 10-rich string
+      3				     ;		     into 16-rich
+      4				     ;------------------------------------------------------------;
+      5
+      6	0000			     .model tiny
+      7	0000			     .code
+      8
+      9				     org 100h
+     10
+     11	0100			     Start:
+     12	0100  E9 012E		     jmp Main					     ; Inache ne compilit
+     13
+     14	      =050A		     L_U_CORNER	     = 160 * 8 + 10
+     15	      =0018		     LENGH	     = 18h
+     16	      =0007		     HIGH	     = 7h
+*Warning* strtr.asm(16)	Reserved word used as symbol: HIGH
+     17	      =B800		     VIDEOSEG	     = 0b800h
+     18
+     19	      =00C9		     YGOL_1	     = 0c9h			     ; Left Up corner
+     20	      =00C8		     YGOL_2	     = 0c8h			     ; Left Down corner
+     21	      =00BB		     YGOL_3	     = 0bbh			     ; Right Up	corner
+     22	      =00BC		     YGOL_4	     = 0bch			     ; Right Down corner
+     23	      =00BA		     STENA	     = 0bah			     ; Wall
+     24	      =00CD		     POL	     = 0cdh			     ; pol/potolok
+     25	      =004E		     COLOR	     = 4eh			     ; color of	all
+     26
+     27				     ;=================== RAMKA	PRINT DECLARE ==============================
+     28				     ;!!     input:  many defines
+     29				     ;!!     exit    bx	- D_R corner
+     30				     ;!!     destroy:	     cx
+     31				     ;=================================================================
+     32
+     33	0103			     RamkaPrint	proc				     ; Print ramka
+     34	0103  BB 050A				     mov bx, L_U_CORNER
+     35	0106  26: C7 07	00C9			     mov es:[bx], YGOL_1
+*Warning* strtr.asm(35)	Argument needs type override
+     36	010B  26: C7 47	01 004E			     mov es:[bx+1], COLOR	     ; Print first ygol
+*Warning* strtr.asm(36)	Argument needs type override
+     37	0111  83 C3 02				     add bx, 2
+     38
+     39	0114  B9 053A				     mov cx, L_U_CORNER	+ LENGH	+ LENGH
+     40
+     41	0117  26: C7 07	00CD	     Fir_line:	     mov es:[bx], pol		     ; while(not sentr line)
+*Warning* strtr.asm(41)	Argument needs type override
+     42	011C  26: C7 47	01 004E			     mov es:[bx+1], COLOR	     ; printf("=")
+*Warning* strtr.asm(42)	Argument needs type override
+     43	0122  83 C3 02				     add bx, 2			     ; bx = bx + 2
+     44
+     45	0125  3B D9				     cmp bx, cx
+     46	0127  75 EE				     jne Fir_line	     ; while end
+     47
+     48	0129  26: C7 07	00BB			     mov es:[bx], YGOL_3
+*Warning* strtr.asm(48)	Argument needs type override
+     49	012E  26: C7 47	01 004E			     mov es:[bx+1], COLOR
+*Warning* strtr.asm(49)	Argument needs type override
+     50
+Turbo Assembler	 Version 4.1	    03/04/18 13:26:50	    Page 2
+strtr.asm
+
+
+
+     51
+     52	0134  81 C3 00A0	     New_line:	     add bx, 160
+     53	0138  8B D3				     mov dx, bx			     ; dx = end	of new line
+     54	013A  83 EB 30				     sub bx, LENGH + LENGH	     ; bx = start of new line
+     55	013D  26: C7 07	00BA			     mov es:[bx], STENA
+*Warning* strtr.asm(55)	Argument needs type override
+     56	0142  26: C7 47	01 004E			     mov es:[bx	+ 1], COLOR	     ; set left	wall
+*Warning* strtr.asm(56)	Argument needs type override
+     57
+     58	0148  83 C3 02		     Sentr_line:     add bx, 2
+     59	014B  3B DA				     cmp bx, dx
+     60	014D  75 F9				     jne Sentr_line
+     61	014F  26: C7 07	00BA			     mov es:[bx], STENA		     ; +---------------------+
+*Warning* strtr.asm(61)	Argument needs type override
+     62	0154  26: C7 47	01 004E			     mov es:[bx	+ 1], COLOR	     ; | print walls	     |
+*Warning* strtr.asm(62)	Argument needs type override
+     63										     ; | using si position   |
+     64	015A  3B DE				     cmp bx, si			     ; | as end		     |
+     65	015C  74 02				     je	End_line_st		     ; +---------------------+
+     66	015E  EB D4				     jmp New_line
+     67
+     68	0160  83 EB 30		     End_line_st:    sub bx, LENGH + LENGH
+     69
+     70	0163  26: C7 07	00C8			     mov es:[bx], YGOL_2
+*Warning* strtr.asm(70)	Argument needs type override
+     71	0168  26: C7 47	01 004E			     mov es:[bx	+ 1], COLOR
+*Warning* strtr.asm(71)	Argument needs type override
+     72	016E  83 C3 02				     add bx, 2
+     73
+     74	0171  26: C7 07	00CD	     End_line:	     mov es:[bx], POL
+*Warning* strtr.asm(74)	Argument needs type override
+     75	0176  26: C7 47	01 004E			     mov es:[bx+1], COLOR
+*Warning* strtr.asm(75)	Argument needs type override
+     76	017C  83 C3 02				     add bx, 2
+     77	017F  3B DE				     cmp bx, si
+     78	0181  75 EE				     jne End_line
+     79
+     80	0183  26: C7 07	00BC			     mov es:[bx], YGOL_4
+*Warning* strtr.asm(80)	Argument needs type override
+     81	0188  26: C7 47	01 004E			     mov es:[bx+1], COLOR
+*Warning* strtr.asm(81)	Argument needs type override
+     82
+     83	018E  C3				     ret
+     84	018F			     RamkaPrint	endp
+     85
+     86				     ;========================== PRINT DECLARE ==============================
+     87				     ;!!     Entry   si	= offset str
+     88				     ;!!     Exit    bx	= adr end of printf
+     89				     ;!!	     cx	= start	of printf
+     90				     ;!!     Destroy dl, ax
+     91				     ;===================================================================
+     92
+     93	018F			     Printer proc
+     94	018F  8B CB				     mov cx, bx
+     95	0191  8A 04		     Next:	     mov al, [si]		     ; al = si*
+     96	0193  46				     inc si			     ; si++
+     97
+Turbo Assembler	 Version 4.1	    03/04/18 13:26:50	    Page 3
+strtr.asm
+
+
+
+     98	0194  3C 24				     cmp al, '$'		     ; if(al ==	'$')
+     99	0196  74 13				     je	End_t			     ;	 jump End_t
+    100
+    101	0198  26: 88 07				     mov es:[bx], al		     ; Text[bx]	= cur_sym
+    102	019B  26: C7 47	01 004E			     mov es:[bx+1], 4eh		     ; Y on B
+*Warning* strtr.asm(102) Argument needs	type override
+    103	01A1  8A D0				     mov dl, al			     ; save al
+    104
+    105	01A3  83 C3 02				     add bx, 2
+    106
+    107	01A6  80 FA 24				     cmp dl, '$'
+    108	01A9  75 E6				     jne Next			     ; while end
+    109
+    110	01AB  C3		     End_t:	     ret
+    111	01AC			     Printer endp
+    112
+    113				     ;======================== ascii --> h DECLARE (mem_1 = accii) ==============
+    114				     ;!!     input:  mem_1 = accii   bx	= start	of print
+    115				     ;!!     exit:   bx	= end of printf
+    116				     ;!!     Destroy:	     si, dx
+    117				     ;===============================================================
+    118
+    119	01AC			     H_create proc
+    120	01AC  33 F6				     xor si, si
+    121	01AE			     H_start:
+    122	01AE  83 C3 02				     add bx, 2			     ; bx = bx + 2
+    123	01B1  33 D2				     xor dx, dx			     ; dx = 0
+    124	01B3  81 CA F000			     or	dx, 1111000000000000b	     ; -2 chasa	zisny na otladky
+    125	01B7  23 16 0296r			     and dx, [sc_num]		     ; get last	4 bits from mem_1
+    126	01BB  D1 26 0296r D1 26	  +		     shl [sc_num], 4h		     ; move to next 4 bits in mem_1
+    127	      0296r D1 26 0296r	D1+
+    128	      26 0296r
+    129	01CB  D0 EE D0 EE D0 EE	D0+		     shr dh, 4h			     ; dl looks	like "0000 xxxx"
+    130	      EE
+    131	01D3  80 FE 0A				     cmp dh, 0ah		     ; is num or letter?
+    132	01D6  72 12				     jb	H_num
+    133
+    134	01D8  80 C6 41				     add dh, 'A'		     ; if dl >=	10
+    135	01DB  80 EE 0A				     sub dh, 0ah
+    136	01DE  26: 88 37				     mov es:[bx], dh		     ; is letter
+    137	01E1  26: C7 47	01 004E			     mov es:[bx+1], COLOR
+*Warning* strtr.asm(134) Argument needs	type override
+    138	01E7  EB 0D 90				     jmp H_end
+    139
+    140	01EA  80 C6 30		     H_num:	     add dh, '0'		     ; if dl < 10
+    141	01ED  26: 88 37				     mov es:[bx], dh		     ; is num
+    142	01F0  26: C7 47	01 004E			     mov es:[bx+1], COLOR
+*Warning* strtr.asm(139) Argument needs	type override
+    143
+    144	01F6			     H_end:
+    145	01F6  83 C6 01				     add si, 1
+    146	01F9  83 FE 04				     cmp si, 4
+    147	01FC  75 B0				     jne H_start
+    148
+    149	01FE  A1 0298r				     mov ax, [sc_num_save]
+    150	0201  A3 0296r				     mov [sc_num], ax
+    151
+Turbo Assembler	 Version 4.1	    03/04/18 13:26:50	    Page 4
+strtr.asm
+
+
+
+    152	0204  C3				     ret
+    153	0205			     H_create endp
+    154
+    155
+    156				     ;======================== STRING SCANF ================================
+    157				     ;!!     input:  nothing
+    158				     ;!!     exit:   sc_num_save, sc_num = scanned num
+    159				     ;!!     destroy:	     ax, bx, cx, dx
+    160				     ;===================================================================
+    161
+    162	0205			     String_scanf proc
+    163
+    164
+    165	0205  33 C0		     Str_sycle:		     xor ax, ax
+    166	0207  CD 16				     int 16h
+    167
+    168	0209  3C 71				     cmp al, 'q'	     ; if( al == 'q')
+    169	020B  74 1D				     je	Str_end		     ; return
+    170
+    171	020D  32 E4				     xor ah, ah
+    172	020F  8A C8				     mov cl, al
+    173
+    174	0211  33 C0				     xor ax, ax
+    175	0213  A1 0296r				     mov ax, [sc_num]
+    176	0216  BB 000A				     mov bx, 0ah
+    177	0219  F7 E3				     mul bx		     ; sc_num =	sc_num * 10
+    178	021B  A3 0296r				     mov [sc_num], ax
+    179
+    180	021E  33 C0				     xor ax, ax
+    181	0220  8A C1				     mov al, cl
+    182	0222  2C 30				     sub al, '0'
+    183	0224  01 06 0296r			     add [sc_num], ax		     ; sc_num =	sc_num + al
+    184
+    185	0228  EB DB				     jmp Str_sycle
+    186
+    187
+    188	022A  A1 0296r		     Str_end:		     mov ax, [sc_num]
+    189	022D  A3 0298r				     mov [sc_num_save],	ax
+    190	0230  C3				     ret
+    191	0231			     String_scanf endp
+    192
+    193				     ;====================================================================
+    194
+    195				     ;===========================================================================
+    196				     ;=================================== MAIN START ============================
+    197				     ;===========================================================================
+    198
+    199	0231			     Main:
+    200	0231  B8 B800				     mov ax, VIDEOSEG		     ;
+    201	0234  8E C0				     mov es, ax			     ; es = VIDEOSEG
+    202	0236  BB 050A				     mov bx, L_U_CORNER		     ; bx = senter
+    203	0239  BA 0000				     mov dx, 0h			     ; dl = 0
+    204	023C  BE 053A				     mov si, L_U_CORNER	+ LENGH	* 2  ; si = end	of cur line
+    205
+    206										     ; printf ramka
+    207	023F  B8 0020		     Line:	     mov ax, ' '		     ; al = ' '
+    208	0242  26: 88 07				     mov es:[bx], al		     ; place ramka
+Turbo Assembler	 Version 4.1	    03/04/18 13:26:50	    Page 5
+strtr.asm
+
+
+
+    209	0245  26: C7 47	01 004E			     mov es:[bx+1], COLOR	     ; red backgrownd
+*Warning* strtr.asm(206) Argument needs	type override
+    210
+    211	024B  83 C3 02				     add bx, 2			     ; bx = bx + 2
+    212
+    213	024E  3B DE				     cmp bx, si			     ; while end Line
+    214	0250  75 ED				     jne Line
+    215
+    216	0252  81 C6 00A0			     add si, 0a0h		     ; si = si + 160
+    217	0256  8B C6				     mov ax, si			     ;
+    218	0258  2D 0030				     sub ax, LENGH * 2		     ;
+    219	025B  8B D8				     mov bx, ax			     ; move on L_U_CORNER
+    220
+    221	025D  83 FA 07				     cmp dx, HIGH
+    222	0260  74 07				     je	Getch
+    223
+    224	0262  83 C2 01				     add dx, 1			     ; dx++
+    225
+    226	0265  3B DE				     cmp bx, si
+    227	0267  75 D6				     jne Line			     ; while in	colums
+    228
+    229
+    230	0269  E8 FF99		     Getch:	     call String_scanf			     ; scanf("[^\n]", &sc_num )
+    231
+    232
+    233	026C			     Ramka:
+    234	026C  E8 FE94				     call RamkaPrint		     ; si = END!
+    235
+    236
+    237				     ;-------------------------	TRANSLITION PART ------------------------------
+    238				     ; Here was	translition in 16-rich
+    239
+    240	026F  BB 05AC				     mov bx, L_U_CORNER	+ 162
+    241	0272  E8 FF37				     call H_create
+    242
+    243	0275  33 C0				     xor ax, ax
+    244
+    245
+    246				     ;========================================================================
+    247
+    248	0277  B8 4C00				     mov ax, 4c00h		     ; exit(0)
+    249	027A  CD 21				     int 21h
+    250
+    251				     ;============================ DATA	==============================
+    252
+    253	027C  EB 1C 90				     jmp Mem_end
+    254	027F  49 20 03 20 63 61	74+  meow	     db	     'I	', 03h,	' cats!$'
+    255	      73 21 24
+    256	0289  31 36 2D 72 69 63	68+  info_h	     db	     '16-rich =	$'
+    257	      20 3D 20 24
+    258	0294  00		     mem_1	     db	     0
+    259	0295  00		     mem_2	     db	     0
+    260	0296  0000		     sc_num	     dw	     0
+    261	0298  0000		     sc_num_save     dw	     0
+    262
+    263	029A			     Mem_end:
+    264
+Turbo Assembler	 Version 4.1	    03/04/18 13:26:50	    Page 6
+strtr.asm
+
+
+
+    265				     end Start
+Turbo Assembler	 Version 4.1	    03/04/18 13:26:50	    Page 7
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "03/04/18"
+??FILENAME			  Text	 "strtr	  "
+??TIME				  Text	 "13:26:49"
+??VERSION			  Number 040A
+@32BIT				  Text	 0
+@CODE				  Text	 DGROUP
+@CODESIZE			  Text	 0
+@CPU				  Text	 0101H
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 STRTR
+@INTERFACE			  Text	 000H
+@MODEL				  Text	 1
+@STACK				  Text	 DGROUP
+@WORDSIZE			  Text	 2
+COLOR				  Number 004E
+END_LINE			  Near	 DGROUP:0171
+END_LINE_ST			  Near	 DGROUP:0160
+END_T				  Near	 DGROUP:01AB
+FIR_LINE			  Near	 DGROUP:0117
+GETCH				  Near	 DGROUP:0269
+HIGH				  Number 0007
+H_CREATE			  Near	 DGROUP:01AC
+H_END				  Near	 DGROUP:01F6
+H_NUM				  Near	 DGROUP:01EA
+H_START				  Near	 DGROUP:01AE
+INFO_H				  Byte	 DGROUP:0289
+LENGH				  Number 0018
+LINE				  Near	 DGROUP:023F
+L_U_CORNER			  Number 050A
+MAIN				  Near	 DGROUP:0231
+MEM_1				  Byte	 DGROUP:0294
+MEM_2				  Byte	 DGROUP:0295
+MEM_END				  Near	 DGROUP:029A
+MEOW				  Byte	 DGROUP:027F
+NEW_LINE			  Near	 DGROUP:0134
+NEXT				  Near	 DGROUP:0191
+POL				  Number 00CD
+PRINTER				  Near	 DGROUP:018F
+RAMKA				  Near	 DGROUP:026C
+RAMKAPRINT			  Near	 DGROUP:0103
+SC_NUM				  Word	 DGROUP:0296
+SC_NUM_SAVE			  Word	 DGROUP:0298
+SENTR_LINE			  Near	 DGROUP:0148
+START				  Near	 DGROUP:0100
+STENA				  Number 00BA
+STRING_SCANF			  Near	 DGROUP:0205
+STR_END				  Near	 DGROUP:022A
+STR_SYCLE			  Near	 DGROUP:0205
+VIDEOSEG			  Number B800
+YGOL_1				  Number 00C9
+YGOL_2				  Number 00C8
+YGOL_3				  Number 00BB
+Turbo Assembler	 Version 4.1	    03/04/18 13:26:50	    Page 8
+Symbol Table
+
+
+
+YGOL_4				  Number 00BC
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  _DATA				  16  0000 Word	  Public  DATA
+  _TEXT				  16  029A Word	  Public  CODE
+Turbo Assembler	 Version 4.1	    03/04/18 13:26:50	    Page 9
+Error Summary
+
+
+
+*Warning* strtr.asm(16)	Reserved word used as symbol: HIGH
+*Warning* strtr.asm(35)	Argument needs type override
+*Warning* strtr.asm(36)	Argument needs type override
+*Warning* strtr.asm(41)	Argument needs type override
+*Warning* strtr.asm(42)	Argument needs type override
+*Warning* strtr.asm(48)	Argument needs type override
+*Warning* strtr.asm(49)	Argument needs type override
+*Warning* strtr.asm(55)	Argument needs type override
+*Warning* strtr.asm(56)	Argument needs type override
+*Warning* strtr.asm(61)	Argument needs type override
+*Warning* strtr.asm(62)	Argument needs type override
+*Warning* strtr.asm(70)	Argument needs type override
+*Warning* strtr.asm(71)	Argument needs type override
+*Warning* strtr.asm(74)	Argument needs type override
+*Warning* strtr.asm(75)	Argument needs type override
+*Warning* strtr.asm(80)	Argument needs type override
+*Warning* strtr.asm(81)	Argument needs type override
+*Warning* strtr.asm(102) Argument needs	type override
+*Warning* strtr.asm(134) Argument needs	type override
+*Warning* strtr.asm(139) Argument needs	type override
+*Warning* strtr.asm(206) Argument needs	type override
+
