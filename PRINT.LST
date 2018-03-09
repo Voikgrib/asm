@@ -1,0 +1,435 @@
+Turbo Assembler	 Version 4.1	    03/08/18 20:18:08	    Page 1
+print.asm
+
+
+
+      1				     ;==================================================================;
+      2				     ;		     Printf string on screen
+      3				     ;
+      4				     ;==================================================================;
+      5
+      6	0000			     .model tiny
+      7	0000			     .code
+      8
+      9				     org 100h
+     10
+     11	0100			     Start:
+     12	0100  E9 0198		     jmp Main
+     13
+     14	      =050A		     PR_START		     =	      160 * 8 +	10
+     15	      =B800		     VIDEOSEG	     =	      0b800h				     ; adress of videoseg
+     16	      =004E		     COLOR		     =	      4eh				     ; color of	all
+     17
+     18
+     19				     ;=========================== MY PRINT =============================;
+     20				     ;!!     Input:  offset my_string in stack && arg to stack,	bp = adr of start args in stack
+     21				     ;!! Exit:	     printf string
+     22				     ;!! Destroy:    I don't know what is here!
+     23				     ;!!
+     24				     ;==================================================================;
+     25
+     26	0103			     my_printf proc
+     27	0103  59						     pop cx
+     28	0104  89 0E 02D1r					     mov [saved_adr], cx		     ; save adr	of return
+     29	0108  5E						     pop si					     ; si = offset  +
+     30				     [my_string]
+     31
+     32	0109  BB 050A						     mov bx, PR_START			     ; bx = start position
+     33
+     34	010C			     sycle_start:
+     35	010C  8A 04						     mov al, [si]			     ; al = *si
+     36	010E  3C 24						     cmp al, '$'
+     37	0110  74 5B						     je	printf_end
+     38
+     39	0112  3C 25						     cmp al, '%'				     ; if(is arg?)
+     40	0114  75 46						     jne dump_print			     ;
+     41
+     42	0116  83 C6 01						     add si, 1					     ; si++
+     43
+     44	0119  83 ED 02						     sub bp, 2
+     45	011C  8A 66 00						     mov ah, [bp]			     ;
+     46	011F  88 26 02DDr					     mov [cur_per], ah			     ; get current per
+     47
+     48	0123  8A 04						     mov al, [si]			     ; get symbol after	'%'
+     49
+     50	0125  89 36 02DBr					     mov [s_counter], si	     ; Save counter
+     51
+     52	0129  3C 64						     cmp al, 'd'				     ; 10-rich
+     53	012B  75 06						     jne Next_1
+     54	012D  E8 0133						     call T_create
+     55	0130  EB 23 90						     jmp Next_5
+     56
+     57	0133  3C 6F		     Next_1:		     cmp al, 'o'				     ; 8-rich +
+Turbo Assembler	 Version 4.1	    03/08/18 20:18:08	    Page 2
+print.asm
+
+
+
+     58	0135  75 06						     jne Next_2
+     59	0137  E8 008A						     call E_create
+     60	013A  EB 19 90						     jmp Next_5
+     61
+     62	013D  3C 62		     Next_2:		     cmp al, 'b'				     ; binary +
+     63	013F  75 06						     jne Next_3
+     64	0141  E8 00E4						     call B_create
+     65	0144  EB 0F 90						     jmp Next_5
+     66
+     67	0147  3C 78		     Next_3:		     cmp al, 'x'				     ; 16-rich +
+     68	0149  75 06						     jne Next_4
+     69	014B  E8 0025						     call H_create
+     70	014E  EB 05 90						     jmp Next_5
+     71
+     72	0151  3C 73		     Next_4:		     cmp al, 's'				     ; string
+     73	0153  75 00						     jne Next_5
+     74								     ;!	CALL !
+     75
+     76	0155			     Next_5:
+     77	0155  8B 36 02DBr					     mov si, [s_counter]		     ; recower counter
+     78
+     79															     ;	    +
+     80				     !-!-!-!-!-!-!-!-!-!-!-!-!-!-!
+     81															     ; !    +
+     82				     many moves	with %	       !
+     83															     ;	    +
+     84				     !-!-!-!-!-!-!-!-!-!-!-!-!-!-!
+     85	0159  EB 0D 90						     jmp end_dump_print
+     86
+     87	015C			     dump_print:
+     88	015C  26: 88 07						     mov es:[bx], al
+     89	015F  26: C7 47	01 004E					     mov es:[bx	+ 1], COLOR	     ; printf not %
+*Warning* print.asm(85)	Argument needs type override
+     90	0165  83 C3 02						     add bx, 2
+     91
+     92	0168			     end_dump_print:
+     93
+     94
+     95	0168  83 C6 01						     add si, 1					     ; si++
+     96	016B  EB 9F						     jmp sycle_start
+     97
+     98
+     99	016D			     printf_end:
+    100	016D  8B 0E 02D1r					     mov cx, [saved_adr]
+    101	0171  51						     push cx					     ; return of    +
+    102				     saved adr
+    103	0172  C3						     ret
+    104	0173			     my_printf endp
+    105
+    106				     ;======================== ascii --> h DECLARE (cx = accii)	=================
+    107				     ;!!     input:  mem_1 = accii   bx	= start	of print
+    108				     ;!!     exit:   bx	= end of printf
+    109				     ;!!     Destroy:	     si, dx, ax
+    110				     ;===========================================================================
+    111
+    112	0173			     H_create proc
+    113
+Turbo Assembler	 Version 4.1	    03/08/18 20:18:08	    Page 3
+print.asm
+
+
+
+    114	0173  A0 02DDr				     mov al, [cur_per]
+    115	0176  33 F6				     xor si, si
+    116	0178  83 EB 02				     sub bx, 2
+    117	017B			     H_start:
+    118	017B  83 C3 02				     add bx, 2			     ; bx = bx + 2
+    119	017E  33 D2				     xor dx, dx			     ; dx = 0
+    120	0180  80 CA F0				     or	dl, 11110000b		     ; -2 chasa	zisny na otladky
+    121	0183  22 D0				     and dl, al			     ; get last	4 bits from al
+    122	0185  D0 E0 D0 E0 D0 E0	D0+		     shl al, 4h			     ; move to next 4 bits in al
+    123	      E0
+    124	018D  D0 EA D0 EA D0 EA	D0+		     shr dl, 4h			     ; dl looks	like "0000 xxxx"
+    125	      EA
+    126	0195  80 FA 0A				     cmp dl, 0ah		     ; is num or letter?
+    127	0198  72 12				     jb	H_num
+    128
+    129	019A  80 C2 41				     add dl, 'A'		     ; if dl >=	10
+    130	019D  80 EA 0A				     sub dl, 0ah
+    131	01A0  26: 88 17				     mov es:[bx], dl		     ; is letter
+    132	01A3  26: C7 47	01 004E			     mov es:[bx+1], COLOR
+*Warning* print.asm(125) Argument needs	type override
+    133	01A9  EB 0D 90				     jmp H_end
+    134
+    135	01AC  80 C2 30		     H_num:	     add dl, '0'		     ; if dl < 10
+    136	01AF  26: 88 17				     mov es:[bx], dl		     ; is num
+    137	01B2  26: C7 47	01 004E			     mov es:[bx+1], COLOR
+*Warning* print.asm(130) Argument needs	type override
+    138
+    139	01B8			     H_end:
+    140	01B8  83 C6 01				     add si, 1
+    141	01BB  83 FE 02				     cmp si, 2
+    142	01BE  75 BB				     jne H_start
+    143
+    144	01C0  83 C3 02				     add bx, 2
+    145	01C3  C3				     ret
+    146	01C4			     H_create endp
+    147
+    148				     ;====================== ascii --> 8-razr (cur_per = symbol) ===============
+    149				     ;!! Input:	     cur_per = current peremennaya, bx = where printf
+    150				     ;!!     Exit:   bx	= end of printf
+    151				     ;!!     Destroy:	     si, dx, ax
+    152				     ;!!
+    153				     ;==========================================================================
+    154
+    155	01C4			     E_create proc
+    156	01C4  33 F6				     xor si, si
+    157	01C6  83 EB 02				     sub bx, 2
+    158
+    159	01C9  83 C3 02		     E_start:	     add bx, 2
+    160	01CC  33 C0				     xor ax, ax
+    161	01CE  33 D2				     xor dx, dx
+    162
+    163	01D0  83 FE 00				     cmp si, 0
+    164	01D3  74 20				     je	E_fir
+    165	01D5  80 CA E0				     or	dl, 11100000b
+    166	01D8  22 16 02DDr			     and dl, [cur_per]
+    167	01DC  D0 EA D0 EA D0 EA	D0+		     shr dl, 5h
+    168	      EA D0 EA
+Turbo Assembler	 Version 4.1	    03/08/18 20:18:08	    Page 4
+print.asm
+
+
+
+    169	01E6  D0 26 02DDr D0 26	  +		     shl [cur_per], 3h			     ; Pick 3 bits
+    170	      02DDr D0 26 02DDr
+    171	01F2  EB 1C 90				     jmp E_calc
+    172
+    173	01F5  80 CA C0		     E_fir:	     or	dl, 11000000b
+    174	01F8  22 16 02DDr			     and dl, [cur_per]
+    175	01FC  D0 EA D0 EA D0 EA	D0+		     shr dl, 6h
+    176	      EA D0 EA D0 EA
+    177	0208  D0 26 02DDr D0 26	  +		     shl [cur_per], 2h			     ; Pick 2 left bits
+    178	      02DDr
+    179
+    180	0210			     E_calc:
+    181	0210  80 C2 30				     add dl, 30h
+    182	0213  26: 88 17				     mov es:[bx], dl
+    183	0216  26: C7 47	01 004E			     mov es:[bx+1], COLOR	     ; printer
+*Warning* print.asm(172) Argument needs	type override
+    184
+    185	021C  83 C6 01				     add si, 1
+    186	021F  83 FE 03				     cmp si, 3
+    187	0222  75 A5				     jne E_start		     ; -2 hour of my life
+    188
+    189
+    190	0224  83 C3 02				     add bx, 2
+    191	0227  C3				     ret
+    192	0228			     E_create endp
+    193
+    194				     ;=========================	ascii --> binary =============================
+    195				     ;!! Input:	     cur_per = curren peremennaya, bx =	adress in videoseg
+    196				     ;!!     Exit:   bx	= end of printf
+    197				     ;!!     Destroy:	     si, dx
+    198				     ;========================================================================
+    199
+    200	0228			     B_create proc
+    201	0228  33 F6				     xor si, si
+    202	022A  83 EB 02				     sub bx, 2
+    203
+    204	022D  83 C3 02		     B_start:	     add bx, 2
+    205	0230  33 D2				     xor dx, dx
+    206	0232  80 CA 80				     or	dl, 10000000b
+    207	0235  22 16 02DDr			     and dl, [cur_per]
+    208	0239  D0 EA D0 EA D0 EA	D0+		     shr dl, 7h
+    209	      EA D0 EA D0 EA D0	EA
+    210	0247  D0 26 02DDr			     shl [cur_per], 1h			     ; Get the leftest bit
+    211
+    212	024B  80 C2 30				     add dl, '0'
+    213	024E  26: 88 17				     mov es:[bx], dl
+    214	0251  26: C7 47	01 004E			     mov es:[bx	+ 1], COLOR	     ; print it
+*Warning* print.asm(202) Argument needs	type override
+    215
+    216	0257  83 C6 01				     add si, 1
+    217	025A  83 FE 08				     cmp si, 8h			     ; do it again
+    218	025D  75 CE				     jne B_start
+    219
+    220	025F  83 C3 02				     add bx, 2
+    221
+    222	0262  C3				     ret
+    223	0263			     B_create endp
+Turbo Assembler	 Version 4.1	    03/08/18 20:18:08	    Page 5
+print.asm
+
+
+
+    224
+    225				     ;====================== ascii --> 10-razr ===============================
+    226				     ;!! Input:	     cur_per = curren peremennaya, bx =	adress in videoseg
+    227				     ;!!     Exit:   bx	= end of printf
+    228				     ;!!     Destroy:	     ax, bx, dx, si
+    229				     ;========================================================================
+    230
+    231	0263			     T_create proc
+    232
+    233	0263  26: C7 47	01 004E			     mov es:[bx	+ 1], COLOR
+*Warning* print.asm(221) Argument needs	type override
+    234	0269  26: C7 47	03 004E			     mov es:[bx	+ 3], COLOR
+*Warning* print.asm(222) Argument needs	type override
+    235	026F  83 EB 02				     sub bx, 2
+    236
+    237	0272  33 C0				     xor ax, ax
+    238	0274  B2 0A				     mov dl, 0ah
+    239	0276  A0 02DDr				     mov al, [cur_per]			     ; Get symbol
+    240	0279  83 C3 06				     add bx, 6
+    241
+    242	027C  83 EB 02		     T_start:	     sub bx, 2
+    243	027F  F6 F2				     div dl			     ; Get fir cifra
+    244	0281  8A F4				     mov dh, ah
+    245
+    246	0283  3C 00				     cmp al, 0h			     ; if end of num
+    247	0285  74 0A				     je	T_end			     ; break
+    248
+    249	0287  80 C4 30				     add ah, 30h
+    250	028A  26: 88 27				     mov es:[bx], ah
+    251
+    252	028D  32 E4				     xor ah, ah
+    253	028F  EB EB				     jmp T_start
+    254
+    255	0291  80 C4 30		     T_end:	     add ah, 30h
+    256	0294  26: 88 27				     mov es:[bx], ah		     ; print ostatok
+    257	0297  83 C3 02				     add bx, 2
+    258	029A  C3				     ret
+    259	029B			     T_create endp
+    260
+    261
+    262				     ;==================================================================;
+    263				     ;========================== MAIN START ============================;
+    264				     ;==================================================================;
+    265	029B			     Main:
+    266	029B  B8 B800						     mov ax, VIDEOSEG
+    267	029E  8E C0						     mov es, ax
+    268
+    269	02A0  B9 0000						     mov cx, 0h
+    270
+    271	02A3  51						     push cx
+    272	02A4  8B EC						     mov bp, sp					     ; get adress of+
+    273				     start args
+    274	02A6  FF 36 02D3r					     push d_sym
+    275	02AA  FF 36 02D5r					     push o_sym
+    276	02AE  FF 36 02D7r					     push b_sym
+    277	02B2  FF 36 02D9r					     push ten_sym
+    278	02B6  50 55 8B EC C7 46	02+				     push offset[my_string]
+Turbo Assembler	 Version 4.1	    03/08/18 20:18:08	    Page 6
+print.asm
+
+
+
+    279	      02DEr 5D
+    280
+    281	02C0  E8 FE40						     call my_printf
+    282
+    283	02C3  59		     pop_syc:		     pop cx
+    284	02C4  83 F9 00						     cmp cx, 0h					     ; pop lishnee
+    285	02C7  75 FA						     jne pop_syc
+    286
+    287	02C9  B8 4C00						     mov ax, 4c00h		     ; exit(0)
+    288	02CC  CD 21				     int 21h
+    289	02CE  EB 2D 90						     jmp Mem_end
+    290				     ;------------------------------------------------------------------;
+    291				     ;							MEMORY PART				    +
+    292				     ;
+    293				     ;------------------------------------------------------------------;
+    294
+    295	02D1  0000		     saved_adr		     dw	     0
+    296	02D3  001A		     d_sym		     dw	     1ah
+    297	02D5  000A		     o_sym		     dw	     0ah
+    298	02D7  000F		     b_sym		     dw	     0fh
+    299	02D9  000F		     ten_sym		     dw	     0fh
+    300
+    301	02DB  0000		     s_counter		     dw	     0
+    302	02DD  30		     cur_per		     db	     '0'
+    303	02DE  31 36 2D 3E 20 25	78+  my_string		     db	     '16-> %x 8-> %o 2-> %b 10-> %d$'
+    304	      20 38 2D 3E 20 25	6F+
+    305	      20 32 2D 3E 20 25	62+
+    306	      20 31 30 2D 3E 20	25+
+    307	      64 24
+    308	02FC  00		     num_of_arg		     db	     0
+    309
+    310	02FD			     Mem_end:
+    311				     end Start
+Turbo Assembler	 Version 4.1	    03/08/18 20:18:08	    Page 7
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "03/08/18"
+??FILENAME			  Text	 "print	  "
+??TIME				  Text	 "20:18:08"
+??VERSION			  Number 040A
+@32BIT				  Text	 0
+@CODE				  Text	 DGROUP
+@CODESIZE			  Text	 0
+@CPU				  Text	 0101H
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 PRINT
+@INTERFACE			  Text	 000H
+@MODEL				  Text	 1
+@STACK				  Text	 DGROUP
+@WORDSIZE			  Text	 2
+B_CREATE			  Near	 DGROUP:0228
+B_START				  Near	 DGROUP:022D
+B_SYM				  Word	 DGROUP:02D7
+COLOR				  Number 004E
+CUR_PER				  Byte	 DGROUP:02DD
+DUMP_PRINT			  Near	 DGROUP:015C
+D_SYM				  Word	 DGROUP:02D3
+END_DUMP_PRINT			  Near	 DGROUP:0168
+E_CALC				  Near	 DGROUP:0210
+E_CREATE			  Near	 DGROUP:01C4
+E_FIR				  Near	 DGROUP:01F5
+E_START				  Near	 DGROUP:01C9
+H_CREATE			  Near	 DGROUP:0173
+H_END				  Near	 DGROUP:01B8
+H_NUM				  Near	 DGROUP:01AC
+H_START				  Near	 DGROUP:017B
+MAIN				  Near	 DGROUP:029B
+MEM_END				  Near	 DGROUP:02FD
+MY_PRINTF			  Near	 DGROUP:0103
+MY_STRING			  Byte	 DGROUP:02DE
+NEXT_1				  Near	 DGROUP:0133
+NEXT_2				  Near	 DGROUP:013D
+NEXT_3				  Near	 DGROUP:0147
+NEXT_4				  Near	 DGROUP:0151
+NEXT_5				  Near	 DGROUP:0155
+NUM_OF_ARG			  Byte	 DGROUP:02FC
+O_SYM				  Word	 DGROUP:02D5
+POP_SYC				  Near	 DGROUP:02C3
+PRINTF_END			  Near	 DGROUP:016D
+PR_START			  Number 050A
+SAVED_ADR			  Word	 DGROUP:02D1
+START				  Near	 DGROUP:0100
+SYCLE_START			  Near	 DGROUP:010C
+S_COUNTER			  Word	 DGROUP:02DB
+TEN_SYM				  Word	 DGROUP:02D9
+T_CREATE			  Near	 DGROUP:0263
+T_END				  Near	 DGROUP:0291
+T_START				  Near	 DGROUP:027C
+Turbo Assembler	 Version 4.1	    03/08/18 20:18:08	    Page 8
+Symbol Table
+
+
+
+VIDEOSEG			  Number B800
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  _DATA				  16  0000 Word	  Public  DATA
+  _TEXT				  16  02FD Word	  Public  CODE
+Turbo Assembler	 Version 4.1	    03/08/18 20:18:08	    Page 9
+Error Summary
+
+
+
+*Warning* print.asm(85)	Argument needs type override
+*Warning* print.asm(125) Argument needs	type override
+*Warning* print.asm(130) Argument needs	type override
+*Warning* print.asm(172) Argument needs	type override
+*Warning* print.asm(202) Argument needs	type override
+*Warning* print.asm(221) Argument needs	type override
+*Warning* print.asm(222) Argument needs	type override
+
