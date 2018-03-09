@@ -49,9 +49,13 @@ sycle_start:
 				mov [s_counter], si 		; Save counter
 
 
-				cmp al, 'c'					; ascii
+				cmp al, 'c'					; ascii +
 				jne Next_0				
-				;! CALL !
+				sub bx, 2
+				mov al, [cur_per]
+				mov es:[bx], al
+				mov es:[bx+1], COLOR
+				add bx, 2					
 				jmp Next_5
 
 Next_0:			cmp al, 'd'					; 10-rich +
@@ -268,6 +272,7 @@ Main:
 				push o_sym
 				push b_sym
 				push ten_sym
+				push c_sym
 				push offset[my_string]				
 
 				call my_printf
@@ -288,10 +293,11 @@ d_sym			dw	1ah
 o_sym			dw	0ah
 b_sym			dw	0fh
 ten_sym			dw	0fh
+c_sym			dw	01h
 
 s_counter		dw	0
 cur_per			db	'0'
-my_string		db	'16-> %x 8-> %o 2-> %b 10-> %d$'
+my_string		db	'16-> %x 8-> %o 2-> %b 10-> %d assci-> %c$'
 num_of_arg		db	0
 
 Mem_end:
