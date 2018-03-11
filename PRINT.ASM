@@ -282,7 +282,7 @@ T_start:	sub bx, 2
 
 T_end:		add ah, 30h
 		mov es:[bx], ah			; print ostatok
-		add bx, 2
+		add bx, 4
 		ret
 T_create endp
 
@@ -298,12 +298,12 @@ Main:
 
 				push cx
 				mov bp, sp					; get adress of start args
-				push d_sym
-				push o_sym
-				push b_sym
-				push ten_sym
-				push c_sym
-				mov cx, offset[s_str]
+				push d_sym					; %x
+				push o_sym					; %o
+				push b_sym					; %b
+				push ten_sym				; %d
+				push c_sym					; %c
+				mov cx, offset[s_str]		; %s
 				push cx
 				push offset[my_string]				
 
