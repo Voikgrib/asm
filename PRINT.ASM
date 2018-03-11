@@ -41,7 +41,7 @@ sycle_start:
 				add si, 1					; si++
 
 				sub bp, 2
-				mov ah, [bp]				;
+				mov ah, [bp]				; pop from bp*
 				mov [cur_per], ah			; get current per
 
 				mov al, [si]				; get symbol after '%'			
@@ -79,8 +79,9 @@ Next_3:			cmp al, 'x'					; 16-rich +
 				jmp Next_5
 
 Next_4:			cmp al, 's'					; string
-				jne Next_5				
-				;! CALL !
+				jne Next_5		
+				mov ax, [bp]		
+				call Printer
 
 Next_5:
 				mov si, [s_counter]			; recower counter
@@ -108,8 +109,37 @@ printf_end:
 				ret
 my_printf endp
 
+;========================== PRINT DECLARE ==============================
+;!!	Entry	ax = offset str
+;!!	Exit	bx = adr end of printf
+;!!		cx = start of printf
+;!!	Destroy	dl, ax, si
+;=======================================================================
+
+Printer proc	
+		mov cx, bx
+		mov si, ax
+Next:		mov al, [si]			; al = si*
+		inc si						; si++
+
+		cmp al, '$'					; if(al == '$')
+		je End_t					;   jump End_t
+
+		mov es:[bx], al				; Text[bx] = cur_sym
+		mov es:[bx+1], 4eh			; Y on B
+		mov dl, al					; save al
+
+		add bx, 2
+
+		cmp dl, '$'
+		jne Next					; while end
+
+End_t:		add dx, 2
+			ret
+Printer endp
+
 ;======================== ascii --> h DECLARE (cx = accii) =================
-;!!	input:	mem_1 = accii	bx = start of print
+;!!	input:	cur_per = accii	bx = start of print
 ;!!	exit:	bx = end of printf
 ;!!	Destroy:	si, dx, ax
 ;===========================================================================
@@ -273,6 +303,8 @@ Main:
 				push b_sym
 				push ten_sym
 				push c_sym
+				mov cx, offset[s_str]
+				push cx
 				push offset[my_string]				
 
 				call my_printf
@@ -294,10 +326,11 @@ o_sym			dw	0ah
 b_sym			dw	0fh
 ten_sym			dw	0fh
 c_sym			dw	01h
+s_str			db  'Eeee pok$'
 
 s_counter		dw	0
 cur_per			db	'0'
-my_string		db	'16-> %x 8-> %o 2-> %b 10-> %d assci-> %c$'
+my_string		db	'16-> %x 8-> %o 2-> %b 10-> %d assci-> %c string->{%s}$'
 num_of_arg		db	0
 
 Mem_end:
