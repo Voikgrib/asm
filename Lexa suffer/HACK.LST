@@ -1,0 +1,123 @@
+
+1000:0100 eb 7c            Main:    JMP    Jmp0       
+1000:0102                           db     90         
+1000:0103                           db     'You are great Hacker' 
+1000:0117                           db     'man$suffer ' 
+1000:0122                           db     02         
+1000:0123                           db     '$If$you$try$find$pas' 
+1000:0137                           db     'sword$here$,$you$are' 
+1000:014b                           db     '$idiot$'  
+1000:0152                           db     00,00,00,00 
+1000:0156                           db     '0000000000000000$<' 
+1000:0168                           db     01         
+1000:0169                           db     '> Enter Password <' 
+1000:017b                           db     01,3e,24   
+1000:017e                  Jmp0:                       
+1000:017e b8 00b8                   MOV    AX, b800h  
+1000:0181 8e c0                     MOV    ES, AX     
+1000:0183 bb 1405                   MOV    BX, 0514h  
+1000:0186 b8 6701                   MOV    AX, 0167h  
+1000:0189 e8 1800                   CALL   Proc0      
+1000:018c 8b d9                     MOV    BX, CX     
+1000:018e 81 c3 a000                ADD    BX, 00a0h  
+1000:0192 b4 0a                     MOV    AH, 0ah    
+1000:0194 ba 5601                   MOV    DX, 0156h  
+1000:0197 cd 21                     INT    21h        ;Read string from keyboard
+1000:0199 e8 8500                   CALL   Proc1      
+1000:019c b8 004c                   MOV    AX, 4c00h  
+1000:019f cd 21                     INT    21h        ;Exit
+1000:01a1                           db     e9,df,00   
+1000:01a4                  Proc0:                      
+1000:01a4 8b cb                     MOV    CX, BX     
+1000:01a6 8b f0                     MOV    SI, AX     
+1000:01a8                  Jmp8:                       
+1000:01a8 8a 04                     MOV    AL, BYTE PTR [SI] 
+1000:01aa 46                        INC    SI         
+1000:01ab 3c 24                     CMP    AL, 24h    
+1000:01ad 74 13                     JZ     Jmp7       
+1000:01af 26                                          
+1000:01b0 88 07                     MOV    BYTE PTR ES:[BX], AL 
+1000:01b2 26                                          
+1000:01b3 c7 47 01 4e00             MOV    WORD PTR ES:[BX+Data2], 004eh 
+1000:01b8 8a d0                     MOV    DL, AL     
+1000:01ba 83 c3 02                  ADD    BX, 02h    
+1000:01bd 80 fa 24                  CMP    DL, 24h    
+1000:01c0 75 e6                     JNZ    Jmp8       
+1000:01c2                  Jmp7:                       
+1000:01c2 c3                        RET               
+1000:01c3                  Proc2:                      
+1000:01c3 8b cb                     MOV    CX, BX     
+1000:01c5 33 d2                     XOR    DX, DX     
+1000:01c7 8b f0                     MOV    SI, AX     
+1000:01c9                  Jmp5:                       
+1000:01c9 8a 04                     MOV    AL, BYTE PTR [SI] 
+1000:01cb 46                        INC    SI         
+1000:01cc 3c 24                     CMP    AL, 24h    
+1000:01ce 74 23                     JZ     Jmp4       
+1000:01d0 26                                          
+1000:01d1 88 07                     MOV    BYTE PTR ES:[BX], AL 
+1000:01d3 26                                          
+1000:01d4 c7 47 01 cf00             MOV    WORD PTR ES:[BX+Data2], 00cfh 
+1000:01d9 8a d0                     MOV    DL, AL     
+1000:01db 83 c3 02                  ADD    BX, 02h    
+1000:01de 83 c2 01                  ADD    DX, 01h    
+1000:01e1 8b ce                     MOV    CX, SI     
+1000:01e3 be 0301                   MOV    SI, 0103h  
+1000:01e6 03 f2                     ADD    SI, DX     
+1000:01e8 c7 04 0100                MOV    WORD PTR [SI], 0001h 
+1000:01ec 8b f1                     MOV    SI, CX     
+1000:01ee 80 fa 24                  CMP    DL, 24h    
+1000:01f1 75 d6                     JNZ    Jmp5       
+1000:01f3                  Jmp4:                       
+1000:01f3 c3                        RET               
+1000:01f4                           db     33,d2,32,c0,b4,01,cd 
+1000:01fb                           db     '!<$t '    
+1000:0200                           db     8b,cb,8b,da,88,87,56,01,83,c2,01,8b,d9,26,88,07,26,c7,47,01 
+1000:0214                           db     4e,00,8a,d0,83,c3,02,80,fa,24,75,d6,c3 
+1000:0221                  Proc1:                      
+1000:0221 33 db                     XOR    BX, BX
+				    JMP    Jmp1     
+1000:0223                  Jmp3:                       
+1000:0223 be 5601                   MOV    SI, 0156h  
+1000:0226 83 c6 02                  ADD    SI, 02h    
+1000:0229 03 f3                     ADD    SI, BX     
+1000:022b 8a 04                     MOV    AL, BYTE PTR [SI] 
+1000:022d be 3401                   MOV    SI, 0134h  
+1000:0230 83 c6 04                  ADD    SI, 04h    
+1000:0233 03 f3                     ADD    SI, BX     
+1000:0235 8a 24                     MOV    AH, BYTE PTR [SI] 
+1000:0237 3c 0d                     CMP    AL, 0dh    
+1000:0239 74 0e                     JZ     Jmp1       
+1000:023b 32 e0                     XOR    AH, AL     
+1000:023d 80 fc 00                  CMP    AH, 00h    
+1000:0240 75 2a                     JNZ    Jmp2       
+1000:0242 83 c3 01                  ADD    BX, 01h    
+1000:0245 b2 01                     MOV    DL, 01h    
+1000:0247 eb da                     JMP    Jmp3       
+1000:0249                  Jmp1:                       
+1000:0249 80 fc 24                  ;CMP    AH, 24h    
+1000:024c 75 1e                     ;JNZ    Jmp2       
+1000:024e 80 fa 01                  CMP    DL, 00h    
+1000:0251 75 19                     JNZ    Jmp2       
+1000:0253 b8 00b8                   MOV    AX, b800h  
+1000:0256 8e c0                     MOV    ES, AX     
+1000:0258 bb 1405                   MOV    BX, 0514h  
+1000:025b 81 c3 a000                ADD    BX, 00a0h  
+1000:025f 81 c3 a000                ADD    BX, 00a0h  
+1000:0263 b8 0301                   MOV    AX, 0103h  
+1000:0266 e8 3bff                   CALL   Proc0      
+1000:0269 eb 17                     JMP    Jmp6       
+1000:026b                           db     90         
+1000:026c                  Jmp2:                       
+1000:026c b8 00b8                   MOV    AX, b800h  
+1000:026f 8e c0                     MOV    ES, AX     
+1000:0271 bb 1405                   MOV    BX, 0514h  
+1000:0274 81 c3 a000                ADD    BX, 00a0h  
+1000:0278 81 c3 a000                ADD    BX, 00a0h  
+1000:027c b8 1b01                   MOV    AX, 011bh  
+1000:027f e8 41ff                   CALL   Proc2      
+1000:0282                  Jmp6:                       
+1000:0282 c3                        RET               
+b800:0000                  Data1:                      
+b800:0001                  Data2:                      
+edc8:0000                  Data0:                      

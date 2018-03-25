@@ -1,0 +1,108 @@
+
+1000:0100 e9 0e01          Main:    JMP    Jmp0       
+1000:0103                  Data1:                      
+1000:0103                           db     00,00,00,00 
+1000:0105                  Data6:                      
+1000:0107                           db     'Only the mage knows ' 
+1000:011b                           db     'the password:$Misera' 
+1000:012f                            db     'ble Muggle$Lego$You ' 
+1000:0143                           db     'are a great magician' 
+1000:0157                           db     24,f6,00,0d,01,19,01,0c,01,03,01,c0,00,e5,00,0b,01,fe,00,6f 
+1000:016b                           db     'tl(4)$'   
+1000:0171                  Proc0:                      
+1000:0171 8a 04                     MOV    AL, BYTE PTR [SI] 
+1000:0173 46                          INC    SI         
+1000:0174 3c 24                     CMP    AL, 24h    
+1000:0176 74 13                     JZ     Jmp3       
+1000:0178 26                                          
+1000:0179 88 07                     MOV    BYTE PTR ES:[BX], AL 
+1000:017b 26                                          
+1000:017c c7 47 01 4e00       MOV    WORD PTR ES:[BX+Data4], 004eh 
+1000:0181 8a d0                     MOV    DL, AL     
+1000:0183 83 c3 02                ADD    BX, 02h    
+1000:0186 80 fa 24                 CMP    DL, 24h    
+1000:0189 75 e6                     JNZ    Proc0      
+1000:018b                  Jmp3:                       
+1000:018b c3                          RET  
+             
+1000:018c                  Proc1:                      
+1000:018c bb a00a                 MOV    BX, 0aa0h  
+1000:018f 58                           POP    AX         
+1000:0190 a3 0501                 MOV    WORD PTR [Data0], AX 
+1000:0193 b8 2400                 MOV    AX, 0024h  
+1000:0196 50                          PUSH   AX         
+1000:0197 50                          PUSH   AX         
+1000:0198                  Jmp5:                       
+1000:0198 32 e4                     XOR    AH, AH     
+1000:019a cd 16                      INT    16h       		 ;Read kbd char w/wait
+1000:019c 3c 0d                      CMP    AL, 0dh    
+1000:019e 74 2b                      JZ     Jmp4       
+1000:01a0 50                           PUSH   AX         
+1000:01a1 53                           PUSH   BX         
+1000:01a2 8b 1e 0301            MOV    BX, WORD PTR [Data1] 
+1000:01a6 8b 97 5801            MOV    DX, WORD PTR [BX+Data5] 
+1000:01aa 03 d3                      ADD    DX, BX     
+1000:01ac 81 ea aa00             SUB    DX, 00aah  
+1000:01b0 83 c3 02                ADD    BX, 02h    
+1000:01b3 89 1e 0301           MOV    WORD PTR [Data1], BX 
+1000:01b7 5b                          POP    BX         
+1000:01b8 52                          PUSH   DX         
+1000:01b9 26                                          
+1000:01ba c7 07 2a00            MOV    WORD PTR ES:[BX], 002ah 
+1000:01be 26                                          
+1000:01bf c7 47 01 4e00       MOV    WORD PTR ES:[BX+Data4], 004eh 
+1000:01c4 83 c3 02                ADD    BX, 02h    
+1000:01c7 3c 20                     CMP    AL, 20h    
+1000:01c9 eb cd                     JMP    Jmp5       
+1000:01cb                  Jmp4:                       
+1000:01cb a1 0501                MOV    AX, WORD PTR [Data6] 
+1000:01ce 50                          PUSH   AX         
+1000:01cf c3                           RET   
+            
+1000:01d0                  Proc2:                      
+1000:01d0 58                        POP    AX         
+1000:01d1 a3 0501               MOV    WORD PTR [Data0], AX 
+1000:01d4 8b 1e 0301          MOV    BX, WORD PTR [Data1] 
+1000:01d8 83 fb 12              !    CMP    BX, 12h    
+1000:01db 75 21                   !    JNZ    Jmp1       
+1000:01dd bb e00b               MOV    BX, 0be0h  
+1000:01e0                  Jmp2:                       
+1000:01e0 58                          POP    AX         
+1000:01e1 59                          POP    CX         
+1000:01e2 3a c8                    !	 CMP    CL, AL     
+1000:01e4 75 18                    !	 JNZ    Jmp1       
+1000:01e6 3d 2400                !  CMP    AX, 0024h  
+1000:01e9 75 f5                     !  JNZ    Jmp2       
+1000:01eb b8 00b8                MOV    AX, b800h  
+1000:01ee 8e c0                     MOV    ES, AX     
+1000:01f0 bb 400b                 MOV    BX, 0b40h  
+1000:01f3 be 3f01                  MOV    SI, 013fh  
+1000:01f6 e8 78ff                   CALL   Proc0      
+1000:01f9 a1 0501                 MOV    AX, WORD PTR [Data0] 
+1000:01fc 50                           PUSH   AX         
+1000:01fd c3                           RET               
+1000:01fe                  Jmp1:                       
+1000:01fe b8 00b8                 MOV    AX, b800h  
+1000:0201 8e c0                     MOV    ES, AX     
+1000:0203 bb 400b                MOV    BX, 0b40h  
+1000:0206 be 2901                MOV    SI, 0129h  
+1000:0209 e8 65ff                  CALL   Proc0      
+1000:020c a1 0501                 MOV    AX, WORD PTR [Data0] 
+1000:020f 50                           PUSH   AX         
+1000:0210 c3                          RET     
+          
+1000:0211                  Jmp0:                       
+1000:0211 b8 00b8                MOV    AX, b800h  
+1000:0214 8e c0                     MOV    ES, AX     
+1000:0216 bb 000a                MOV    BX, 0a00h  
+1000:0219 be 0701                MOV    SI, 0107h  
+1000:021c e8 52ff                  CALL   Proc0      
+1000:021f e8 6aff                   CALL   Proc1      
+1000:0222 e8 abff                  CALL   Proc2      
+1000:0225 b8 004c                 MOV    AX, 4c00h  
+1000:0228 cd 21                     INT    21h   		     ;Exit
+2f18:0105                  Data0:                      
+b800:0000                  Data3:                      
+b800:0001                  Data4:                      
+edc8:0000                  Data2:                      
+edc8:0158                  Data5:                      
